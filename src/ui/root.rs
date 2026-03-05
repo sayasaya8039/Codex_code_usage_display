@@ -216,7 +216,6 @@ impl Render for RootWidget {
                                     .cursor_pointer()
                                     .hover(|s| s.bg(WidgetTheme::danger()))
                                     .child("✕")
-                                    .window_control_area(WindowControlArea::Close)
                                     .on_click(cx.listener(
                                         |this, _evt: &ClickEvent, window, cx| {
                                             if this.config.resident_in_tray {
