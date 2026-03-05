@@ -1,0 +1,46 @@
+<svg
+  width="512"
+  height="512"
+  viewBox="0 0 180 180"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f0c29" />
+      <stop offset="50%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#0a0a1a" />
+    </linearGradient>
+    <linearGradient id="strokeGrad" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#a78bfa" />
+      <stop offset="50%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+    <linearGradient id="hexGrad" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c3aed" />
+      <stop offset="50%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <radialGradient id="innerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0" />
+    </radialGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur" />
+      <feMerge>
+        <feMergeNode in="coloredBlur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="180" height="180" rx="40" fill="url(#bgGrad)" />
+  <rect x="0" y="0" width="180" height="180" rx="40" fill="url(#innerGlow)" />
+  <polygon points="90,18 152,54 152,126 90,162 28,126 28,54" fill="none" stroke="url(#strokeGrad)" stroke-width="1.5" opacity="0.35" />
+  <polygon points="90,46 128,68 128,112 90,134 52,112 52,68" fill="url(#hexGrad)" opacity="0.12" />
+  <path d="M62 72 L48 90 L62 108" stroke="url(#strokeGrad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#glow)" />
+  <path d="M118 72 L132 90 L118 108" stroke="url(#strokeGrad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#glow)" />
+  <line x1="99" y1="68" x2="81" y2="112" stroke="url(#strokeGrad)" stroke-width="4.5" stroke-linecap="round" filter="url(#glow)" />
+  <rect x="88" y="112" width="10" height="3.5" rx="1.5" fill="#22d3ee" opacity="0.9" />
+  <rect x="1" y="1" width="178" height="178" rx="39" fill="none" stroke="url(#strokeGrad)" stroke-width="1.5" opacity="0.4" />
+</svg>
