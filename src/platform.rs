@@ -325,12 +325,27 @@ unsafe extern "system" fn tray_wndproc(
     };
 
     if msg == WM_TRAY_ICON {
-        let event = lparam.0 as u32;
-        if event == WM_LBUTTONUP
-            || event == WM_LBUTTONDBLCLK
-            || event == WM_RBUTTONUP
-            || event == WM_CONTEXTMENU
-            || event == NIN_SELECT
+        // With NOTIFYICON_VERSION_4, notification code is packed in LOWORD(lParam).
+        // Keep compatibility with older style by checking both packed and raw values.
+        let raw_event = lparam.0 as u32;
+        let low_event = raw_event & 0xFFFF;
+        if raw_event == WM_LBUTTONUP
+            || raw_event == WM_LBUTTONDBLCLK
+            || raw_event == WM_RBUTTONUP
+            || raw_event == WM_CONTEXTMENU
+            || raw_event == NIN_SELECT
+        {
+            let _ = remove_tray_icon_for(hwnd);
+            let _ = ShowWindow(hwnd, SW_RESTORE);
+            let _ = SetForegroundWindow(hwnd);
+            return LRESULT(0);
+        }
+
+        if low_event == WM_LBUTTONUP
+            || low_event == WM_LBUTTONDBLCLK
+            || low_event == WM_RBUTTONUP
+            || low_event == WM_CONTEXTMENU
+            || low_event == NIN_SELECT
         {
             let _ = remove_tray_icon_for(hwnd);
             let _ = ShowWindow(hwnd, SW_RESTORE);
