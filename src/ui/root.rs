@@ -19,6 +19,7 @@ pub struct RootWidget {
     pub rpc: Option<CodexRpcClient>,
     pub show_settings: bool,
     pub opacity_initialized: bool,
+    pub window_icon_initialized: bool,
 }
 
 impl RootWidget {
@@ -50,6 +51,7 @@ impl RootWidget {
             rpc,
             show_settings: false,
             opacity_initialized: false,
+            window_icon_initialized: false,
         }
     }
 
@@ -90,6 +92,10 @@ impl Render for RootWidget {
         if !self.opacity_initialized {
             self.opacity_initialized = true;
             self.apply_opacity(window);
+        }
+        if !self.window_icon_initialized {
+            self.window_icon_initialized = true;
+            platform::initialize_window_icons(window);
         }
 
         // Track window position in memory (persisted to disk every auto-refresh)
@@ -212,12 +218,21 @@ impl Render for RootWidget {
                                     .child("✕")
                                     .window_control_area(WindowControlArea::Close)
                                     .on_click(cx.listener(
-                                        |this, _evt: &ClickEvent, window, _cx| {
+                                        |this, _evt: &ClickEvent, window, cx| {
                                             if this.config.resident_in_tray {
-                                                platform::minimize_window(window);
-                                                this.save_config();
-                                                return;
+                                                match platform::hide_window_to_tray(window) {
+                                                    Ok(()) => {
+                                                        this.save_config();
+                                                        return;
+                                                    }
+                                                    Err(e) => {
+                                                        this.data.update(cx, |data, _| {
+                                                            data.error = Some(e)
+                                                        });
+                                                    }
+                                                }
                                             }
+                                            platform::remove_tray_icon();
                                             this.save_config();
                                             std::process::exit(0);
                                         },
@@ -451,6 +466,9 @@ impl Render for RootWidget {
                                         |this, _evt: &ClickEvent, _window, _cx| {
                                             this.config.resident_in_tray =
                                                 !this.config.resident_in_tray;
+                                            if !this.config.resident_in_tray {
+                                                platform::remove_tray_icon();
+                                            }
                                             this.save_config();
                                         },
                                     )),
@@ -540,7 +558,7 @@ impl Render for RootWidget {
                     div()
                         .text_color(WidgetTheme::text_secondary())
                         .text_xs()
-                        .child("v0.2.4"),
+                        .child("v0.2.5"),
                 ),
         );
 
