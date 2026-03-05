@@ -1,6 +1,6 @@
 [package]
 name = "codex-usage-widget"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "Windows widget displaying OpenAI Codex usage stats (Zig WASM + gpui)"
 authors = ["sayasaya11"]

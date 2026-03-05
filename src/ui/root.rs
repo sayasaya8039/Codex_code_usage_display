@@ -111,7 +111,7 @@ impl Render for RootWidget {
                     div()
                         .text_color(WidgetTheme::text_secondary())
                         .text_xs()
-                        .child("v0.1.0"),
+                        .child("v0.1.1"),
                 ),
         );
 
