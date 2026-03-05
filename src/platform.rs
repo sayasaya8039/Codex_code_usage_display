@@ -311,14 +311,20 @@ unsafe extern "system" fn tray_wndproc(
     lparam: windows::Win32::Foundation::LPARAM,
 ) -> windows::Win32::Foundation::LRESULT {
     use windows::Win32::Foundation::LRESULT;
+    use windows::Win32::UI::Shell::NIN_SELECT;
     use windows::Win32::UI::WindowsAndMessaging::{
         CallWindowProcW, DefWindowProcW, SW_RESTORE, SetForegroundWindow, ShowWindow, WM_DESTROY,
-        WM_LBUTTONDBLCLK, WM_LBUTTONUP, WM_RBUTTONUP, WNDPROC,
+        WM_CONTEXTMENU, WM_LBUTTONDBLCLK, WM_LBUTTONUP, WM_RBUTTONUP, WNDPROC,
     };
 
     if msg == WM_TRAY_ICON {
         let event = lparam.0 as u32;
-        if event == WM_LBUTTONUP || event == WM_LBUTTONDBLCLK || event == WM_RBUTTONUP {
+        if event == WM_LBUTTONUP
+            || event == WM_LBUTTONDBLCLK
+            || event == WM_RBUTTONUP
+            || event == WM_CONTEXTMENU
+            || event == NIN_SELECT
+        {
             let _ = remove_tray_icon_for(hwnd);
             let _ = ShowWindow(hwnd, SW_RESTORE);
             let _ = SetForegroundWindow(hwnd);
