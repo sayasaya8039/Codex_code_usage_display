@@ -80,11 +80,18 @@ pub fn hide_window_to_tray(window: &gpui::Window) -> Result<(), String> {
     let old = TRAY_OLD_WNDPROC.load(std::sync::atomic::Ordering::SeqCst);
     if old == 0 {
         unsafe {
+            use windows::Win32::Foundation::{GetLastError, SetLastError, WIN32_ERROR};
             use windows::Win32::UI::WindowsAndMessaging::{GWLP_WNDPROC, SetWindowLongPtrW};
+
+            // SetWindowLongPtrW returns previous value; 0 can mean either success or failure.
+            // Disambiguate with GetLastError as documented by Win32.
+            SetLastError(WIN32_ERROR(0));
             let prev = SetWindowLongPtrW(hwnd, GWLP_WNDPROC, tray_wndproc as isize);
-            if prev != 0 {
-                TRAY_OLD_WNDPROC.store(prev, std::sync::atomic::Ordering::SeqCst);
+            let last = GetLastError();
+            if prev == 0 && last.0 != 0 {
+                return Err(format!("トレイ常駐フック設定失敗: {last:?}"));
             }
+            TRAY_OLD_WNDPROC.store(prev, std::sync::atomic::Ordering::SeqCst);
         }
     }
 
