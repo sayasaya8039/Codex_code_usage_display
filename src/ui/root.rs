@@ -2,13 +2,13 @@ use std::time::Duration;
 
 use gpui::*;
 
-use crate::data::fetcher::CodexRpcClient;
-use crate::data::models::{AppConfig, WidgetData};
-use crate::platform;
 use super::cost_card::CreditsCard;
 use super::quota_bar::QuotaBar;
 use super::theme::WidgetTheme;
 use super::usage_panel::UsagePanel;
+use crate::data::fetcher::CodexRpcClient;
+use crate::data::models::{AppConfig, WidgetData};
+use crate::platform;
 
 const AUTO_REFRESH_SECS: u64 = 30;
 
@@ -172,9 +172,11 @@ impl Render for RootWidget {
                                     .cursor_pointer()
                                     .hover(|s| s.bg(WidgetTheme::border()))
                                     .child(if self.show_settings { "✕" } else { "⚙" })
-                                    .on_click(cx.listener(|this, _evt: &ClickEvent, _window, _cx| {
-                                        this.show_settings = !this.show_settings;
-                                    })),
+                                    .on_click(cx.listener(
+                                        |this, _evt: &ClickEvent, _window, _cx| {
+                                            this.show_settings = !this.show_settings;
+                                        },
+                                    )),
                             )
                             // Refresh button
                             .child(
@@ -189,9 +191,11 @@ impl Render for RootWidget {
                                     .cursor_pointer()
                                     .hover(|s| s.bg(WidgetTheme::border()))
                                     .child("更新")
-                                    .on_click(cx.listener(|this, _evt: &ClickEvent, _window, cx| {
-                                        this.do_refresh(cx);
-                                    })),
+                                    .on_click(cx.listener(
+                                        |this, _evt: &ClickEvent, _window, cx| {
+                                            this.do_refresh(cx);
+                                        },
+                                    )),
                             )
                             // Close button
                             .child(
@@ -207,10 +211,17 @@ impl Render for RootWidget {
                                     .hover(|s| s.bg(WidgetTheme::danger()))
                                     .child("✕")
                                     .window_control_area(WindowControlArea::Close)
-                                    .on_click(cx.listener(|this, _evt: &ClickEvent, _window, _cx| {
-                                        this.save_config();
-                                        std::process::exit(0);
-                                    })),
+                                    .on_click(cx.listener(
+                                        |this, _evt: &ClickEvent, window, _cx| {
+                                            if this.config.resident_in_tray {
+                                                platform::minimize_window(window);
+                                                this.save_config();
+                                                return;
+                                            }
+                                            this.save_config();
+                                            std::process::exit(0);
+                                        },
+                                    )),
                             ),
                     ),
             );
@@ -255,11 +266,15 @@ impl Render for RootWidget {
                                             .cursor_pointer()
                                             .hover(|s| s.bg(WidgetTheme::border()))
                                             .child("−")
-                                            .on_click(cx.listener(|this, _evt: &ClickEvent, window, _cx| {
-                                                this.config.opacity = (this.config.opacity - 0.05).clamp(0.1, 1.0);
-                                                this.apply_opacity(window);
-                                                this.save_config();
-                                            })),
+                                            .on_click(cx.listener(
+                                                |this, _evt: &ClickEvent, window, _cx| {
+                                                    this.config.opacity = (this.config.opacity
+                                                        - 0.05)
+                                                        .clamp(0.1, 1.0);
+                                                    this.apply_opacity(window);
+                                                    this.save_config();
+                                                },
+                                            )),
                                     )
                                     .child(
                                         div()
@@ -282,11 +297,15 @@ impl Render for RootWidget {
                                             .cursor_pointer()
                                             .hover(|s| s.bg(WidgetTheme::border()))
                                             .child("＋")
-                                            .on_click(cx.listener(|this, _evt: &ClickEvent, window, _cx| {
-                                                this.config.opacity = (this.config.opacity + 0.05).clamp(0.1, 1.0);
-                                                this.apply_opacity(window);
-                                                this.save_config();
-                                            })),
+                                            .on_click(cx.listener(
+                                                |this, _evt: &ClickEvent, window, _cx| {
+                                                    this.config.opacity = (this.config.opacity
+                                                        + 0.05)
+                                                        .clamp(0.1, 1.0);
+                                                    this.apply_opacity(window);
+                                                    this.save_config();
+                                                },
+                                            )),
                                     ),
                             ),
                     )
@@ -332,11 +351,109 @@ impl Render for RootWidget {
                                     .text_color(WidgetTheme::text_primary())
                                     .cursor_pointer()
                                     .hover(|s| s.bg(WidgetTheme::border()))
-                                    .child(if self.config.always_on_top { "ON" } else { "OFF" })
-                                    .on_click(cx.listener(|this, _evt: &ClickEvent, _window, _cx| {
-                                        this.config.always_on_top = !this.config.always_on_top;
-                                        this.save_config();
-                                    })),
+                                    .child(if self.config.always_on_top {
+                                        "ON"
+                                    } else {
+                                        "OFF"
+                                    })
+                                    .on_click(cx.listener(
+                                        |this, _evt: &ClickEvent, _window, _cx| {
+                                            this.config.always_on_top = !this.config.always_on_top;
+                                            this.save_config();
+                                        },
+                                    )),
+                            ),
+                    )
+                    // Launch on startup
+                    .child(
+                        div()
+                            .flex()
+                            .justify_between()
+                            .items_center()
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .text_color(WidgetTheme::text_primary())
+                                    .child("スタートアップ登録"),
+                            )
+                            .child(
+                                div()
+                                    .id("btn-startup")
+                                    .px_3()
+                                    .py(px(2.0))
+                                    .rounded_md()
+                                    .bg(if self.config.launch_on_startup {
+                                        WidgetTheme::success()
+                                    } else {
+                                        WidgetTheme::bg_accent()
+                                    })
+                                    .text_xs()
+                                    .text_color(WidgetTheme::text_primary())
+                                    .cursor_pointer()
+                                    .hover(|s| s.bg(WidgetTheme::border()))
+                                    .child(if self.config.launch_on_startup {
+                                        "ON"
+                                    } else {
+                                        "OFF"
+                                    })
+                                    .on_click(cx.listener(
+                                        |this, _evt: &ClickEvent, _window, cx| {
+                                            let next = !this.config.launch_on_startup;
+                                            match platform::set_startup_enabled(next) {
+                                                Ok(()) => {
+                                                    this.config.launch_on_startup = next;
+                                                    this.save_config();
+                                                    this.data
+                                                        .update(cx, |data, _| data.error = None);
+                                                }
+                                                Err(e) => {
+                                                    this.data
+                                                        .update(cx, |data, _| data.error = Some(e));
+                                                }
+                                            }
+                                        },
+                                    )),
+                            ),
+                    )
+                    // Resident in tray mode
+                    .child(
+                        div()
+                            .flex()
+                            .justify_between()
+                            .items_center()
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .text_color(WidgetTheme::text_primary())
+                                    .child("システムトレイ常駐"),
+                            )
+                            .child(
+                                div()
+                                    .id("btn-resident-in-tray")
+                                    .px_3()
+                                    .py(px(2.0))
+                                    .rounded_md()
+                                    .bg(if self.config.resident_in_tray {
+                                        WidgetTheme::success()
+                                    } else {
+                                        WidgetTheme::bg_accent()
+                                    })
+                                    .text_xs()
+                                    .text_color(WidgetTheme::text_primary())
+                                    .cursor_pointer()
+                                    .hover(|s| s.bg(WidgetTheme::border()))
+                                    .child(if self.config.resident_in_tray {
+                                        "ON"
+                                    } else {
+                                        "OFF"
+                                    })
+                                    .on_click(cx.listener(
+                                        |this, _evt: &ClickEvent, _window, _cx| {
+                                            this.config.resident_in_tray =
+                                                !this.config.resident_in_tray;
+                                            this.save_config();
+                                        },
+                                    )),
                             ),
                     )
                     // Config path
@@ -423,7 +540,7 @@ impl Render for RootWidget {
                     div()
                         .text_color(WidgetTheme::text_secondary())
                         .text_xs()
-                        .child("v0.2.3"),
+                        .child("v0.2.4"),
                 ),
         );
 
