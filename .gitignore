@@ -1,0 +1,8 @@
+/target
+/zig-wasm/.zig-cache
+/zig-wasm/zig-out
+*.wasm
+*.exe
+*.msi
+.env
+config.json
